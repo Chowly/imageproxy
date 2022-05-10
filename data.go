@@ -120,9 +120,9 @@ func (o Options) String() string {
 	if o.Signature != "" {
 		opts = append(opts, fmt.Sprintf("%s%s", optSignaturePrefix, o.Signature))
 	}
-	if o.ScaleUp {
-		opts = append(opts, optScaleUp)
-	}
+	
+	opts = append(opts, optScaleUp)
+
 	if o.Format != "" {
 		opts = append(opts, o.Format)
 	}
@@ -258,6 +258,9 @@ func ParseOptions(str string) Options {
 		str = s
 	}
 	for _, opt := range strings.Split(str, ",") {
+		
+		options.ScaleUp = true
+		
 		switch {
 		case len(opt) == 0: // do nothing
 		case opt == optFit:
@@ -268,8 +271,6 @@ func ParseOptions(str string) Options {
 			options.FlipVertical = true
 		case opt == optFlipHorizontal:
 			options.FlipHorizontal = true
-		case opt == optScaleUp: // this option is intentionally not documented above
-			options.ScaleUp = true
 		case opt == optFormatJPEG, opt == optFormatPNG, opt == optFormatTIFF:
 			options.Format = opt
 		case opt == optSmartCrop:

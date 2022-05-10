@@ -177,7 +177,7 @@ func (p *Proxy) serveImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// assign static settings from proxy to req.Options
-	req.Options.ScaleUp = p.ScaleUp
+	req.Options.ScaleUp = true
 
 	actualReq, _ := http.NewRequest("GET", req.String(), nil)
 	if p.UserAgent != "" {
