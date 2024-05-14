@@ -238,11 +238,12 @@ func exifOrientation(r io.Reader) (opt Options) {
 	)
 
 	ex, err := exif.Decode(r)
-	if err != nil {
+	if err != nil && exif.IsCriticalError(err) {
 		return opt
 	}
 	tag, err := ex.Get(exif.Orientation)
 	if err != nil {
+
 		return opt
 	}
 	orient, err := tag.Int(0)
@@ -293,7 +294,7 @@ func transformImage(m image.Image, opt Options) image.Image {
 	// resize if needed
 	if resize {
 		if opt.Fit {
-			if (h > 0 && h > m.Bounds().Max.Y) {
+			if h > 0 && h > m.Bounds().Max.Y {
 				m = imaging.Resize(m, 0, h, resampleFilter)
 			} else {
 				m = imaging.Fit(m, w, h, resampleFilter)
