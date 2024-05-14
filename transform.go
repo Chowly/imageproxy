@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	_ "image/gif" // register gif format
 	"image/jpeg"
 	"image/png"
@@ -288,10 +289,15 @@ func transformImage(m image.Image, opt Options) image.Image {
 	if !m.Bounds().Eq(rect) {
 		m = imaging.Crop(m, rect)
 	}
+
 	// resize if needed
 	if resize {
 		if opt.Fit {
-			m = imaging.Fit(m, w, h, resampleFilter)
+			if (h > 0 && h > m.Bounds().Max.Y) {
+				m = imaging.Resize(m, 0, h, resampleFilter)
+			} else {
+				m = imaging.Fit(m, w, h, resampleFilter)
+			}
 		} else {
 			if w == 0 || h == 0 {
 				m = imaging.Resize(m, w, h, resampleFilter)
@@ -318,6 +324,15 @@ func transformImage(m image.Image, opt Options) image.Image {
 	}
 	if opt.FlipHorizontal {
 		m = imaging.FlipH(m)
+	}
+
+	if opt.Pad {
+		originalWidth := m.Bounds().Max.X
+		newCenter := (w / 2) - (originalWidth / 2)
+
+		m2 := imaging.New(w, h, color.NRGBA{255, 255, 255, 255})
+		m2 = imaging.Paste(m2, m, image.Pt(newCenter, 0))
+		m = m2
 	}
 
 	return m

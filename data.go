@@ -26,6 +26,7 @@ import (
 
 const (
 	optFit             = "fit"
+	optPad             = "pad"
 	optFlipVertical    = "fv"
 	optFlipHorizontal  = "fh"
 	optFormatJPEG      = "jpeg"
@@ -63,6 +64,9 @@ type Options struct {
 	// will not be cropped, and aspect ratio will be maintained.
 	Fit bool
 
+	// If true we will pad the image to requested dimensions
+	Pad bool
+
 	// Rotate image the specified degrees counter-clockwise.  Valid values
 	// are 90, 180, 270.
 	Rotate int
@@ -98,6 +102,9 @@ func (o Options) String() string {
 	if o.Fit {
 		opts = append(opts, optFit)
 	}
+	if o.Pad {
+		opts = append(opts, optPad)
+	}
 	if o.Rotate != 0 {
 		opts = append(opts, fmt.Sprintf("%s%d", optRotatePrefix, o.Rotate))
 	}
@@ -113,9 +120,9 @@ func (o Options) String() string {
 	if o.Signature != "" {
 		opts = append(opts, fmt.Sprintf("%s%s", optSignaturePrefix, o.Signature))
 	}
-	if o.ScaleUp {
-		opts = append(opts, optScaleUp)
-	}
+	
+	opts = append(opts, optScaleUp)
+
 	if o.Format != "" {
 		opts = append(opts, o.Format)
 	}
@@ -251,16 +258,19 @@ func ParseOptions(str string) Options {
 		str = s
 	}
 	for _, opt := range strings.Split(str, ",") {
+		
+		options.ScaleUp = true
+		
 		switch {
 		case len(opt) == 0: // do nothing
 		case opt == optFit:
 			options.Fit = true
+		case opt == optPad:
+			options.Pad = true
 		case opt == optFlipVertical:
 			options.FlipVertical = true
 		case opt == optFlipHorizontal:
 			options.FlipHorizontal = true
-		case opt == optScaleUp: // this option is intentionally not documented above
-			options.ScaleUp = true
 		case opt == optFormatJPEG, opt == optFormatPNG, opt == optFormatTIFF:
 			options.Format = opt
 		case opt == optSmartCrop:
@@ -349,7 +359,7 @@ func NewRequest(r *http.Request, baseURL *url.URL) (*Request, error) {
 		var err error
 
 		remote_url := parts[1]
-		s, err := url.QueryUnescape(remote_url)
+		s, err := url.PathUnescape(remote_url)
 		if err == nil {
 			remote_url = s
 		}
@@ -386,7 +396,7 @@ var reCleanedURL = regexp.MustCompile(`^(https?):/+([^/])`)
 // path.Clean or a webserver that collapses multiple slashes.
 func parseURL(s string) (*url.URL, error) {
 	s = reCleanedURL.ReplaceAllString(s, "$1://$2")
-	s, err := url.QueryUnescape(s)
+	s, err := url.PathUnescape(s)
 	if err != nil {
 		return nil, err
 	}
