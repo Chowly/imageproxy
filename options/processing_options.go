@@ -1209,18 +1209,12 @@ func ParsePath(path string, headers http.Header) (*ProcessingOptions, string, er
 		}
 		format_parts := strings.Split(legacy_format, ",")
 
-		fmt.Println("format_parts:", format_parts)
-
 		size := format_parts[0]
 		mode := format_parts[1]
 		advanced := format_parts[2:]
 
 		extend := 0
 		format := "png"
-
-		fmt.Println("size:", size)
-		fmt.Println("mode:", mode)
-		fmt.Println("advanced:", advanced)
 
 		if strings.Contains(size, "x") {
 			size = strings.Replace(size, "x", ":", 1)
