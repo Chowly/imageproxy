@@ -81,13 +81,5 @@ func decodePlainURL(parts []string) (string, string, error) {
 }
 
 func DecodeURL(parts []string) (string, string, error) {
-	if len(parts) == 0 {
-		return "", "", errors.New("Image URL is empty")
-	}
-
-	if parts[0] == urlTokenPlain && len(parts) > 1 {
-		return decodePlainURL(parts[1:])
-	}
-
-	return decodeBase64URL(parts)
+	return decodePlainURL(parts[0:])
 }

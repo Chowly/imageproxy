@@ -225,22 +225,8 @@ func handleProcessing(reqID string, rw http.ResponseWriter, r *http.Request) {
 	}
 
 	path = strings.TrimPrefix(path, "/")
-	signature := ""
-
-	if signatureEnd := strings.IndexByte(path, '/'); signatureEnd > 0 {
-		signature = path[:signatureEnd]
-		path = path[signatureEnd:]
-	} else {
-		sendErrAndPanic(ctx, "path_parsing", ierrors.New(
-			404, fmt.Sprintf("Invalid path: %s", path), "Invalid URL",
-		))
-	}
 
 	path = fixPath(path)
-
-	if err := security.VerifySignature(signature, path); err != nil {
-		sendErrAndPanic(ctx, "security", ierrors.New(403, err.Error(), "Forbidden"))
-	}
 
 	po, imageURL, err := options.ParsePath(path, r.Header)
 	checkErr(ctx, "path_parsing", err)

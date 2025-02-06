@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -1200,10 +1201,55 @@ func ParsePath(path string, headers http.Header) (*ProcessingOptions, string, er
 		err      error
 	)
 
-	if config.OnlyPresets {
-		po, imageURL, err = parsePathPresets(parts, headers)
-	} else {
+	if strings.Contains(parts[0], "%2C") || strings.Contains(parts[0], ",") {
+		legacy_format := parts[0]
+		legacy_format, err = url.PathUnescape(legacy_format)
+		if err != nil {
+			return nil, "", ierrors.New(404, fmt.Sprintf("Invalid legacy format: %s", legacy_format), "Invalid URL")
+		}
+		format_parts := strings.Split(legacy_format, ",")
+
+		fmt.Println("format_parts:", format_parts)
+
+		size := format_parts[0]
+		mode := format_parts[1]
+		advanced := format_parts[2:]
+
+		extend := 0
+		format := "png"
+
+		fmt.Println("size:", size)
+		fmt.Println("mode:", mode)
+		fmt.Println("advanced:", advanced)
+
+		if strings.Contains(size, "x") {
+			size = strings.Replace(size, "x", ":", 1)
+		} else {
+			size = size + ":"
+		}
+
+		if slices.Contains(advanced, "pad") {
+			extend = 1
+		}
+
+		for _, key := range advanced {
+			if _, ok := imagetype.Types[key]; ok {
+				format = key
+			}
+		}
+
+		new_parts := []string{fmt.Sprintf("rs:%s:%s:1:%d", mode, size, extend), fmt.Sprintf("format:%s", format)}
+		parts = append(new_parts, parts[1:]...)
+
 		po, imageURL, err = parsePathOptions(parts, headers)
+
+	} else {
+
+		if config.OnlyPresets {
+			po, imageURL, err = parsePathPresets(parts, headers)
+		} else {
+			po, imageURL, err = parsePathOptions(parts, headers)
+		}
 	}
 
 	if err != nil {
